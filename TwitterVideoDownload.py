@@ -3,8 +3,14 @@ import requests
 from bs4 import BeautifulSoup
 import tweepy
 
-# Set up your Twitter API credentials
-BEARER_TOKEN = 'YOUR_TWITTER_BEARER_TOKEN'
+# Twitter API credentials
+
+# stored in environment system variables
+
+BEARER_TOKEN = os.environ.get('TwitterBearerToken')
+
+if BEARER_TOKEN is None:
+  print("API Key not found in environment variables. Please set it using 'setx TWITTER_API_KEY=YOUR_KEY' (Windows) or export TWITTER_API_KEY=YOUR_KEY (Linux/macOS).")
 
 def get_tweet_id(url):
     """Extract tweet ID from the URL."""
