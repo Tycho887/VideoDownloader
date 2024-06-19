@@ -14,7 +14,7 @@ from tqdm import tqdm
 from pathlib import Path
 
 
-def download_video(url, file_name) -> None:
+def download_video(url, file_name, video_destination) -> None:
     """Download a video from a URL into a filename.
 
     Args:
@@ -27,7 +27,7 @@ def download_video(url, file_name) -> None:
     block_size = 1024
     progress_bar = tqdm(total=total_size, unit="B", unit_scale=True)
 
-    download_path = os.path.join(Path.home(), "Downloads", file_name)
+    download_path = f"{video_destination}/{file_name}"
 
     with open(download_path, "wb") as file:
         for data in response.iter_content(block_size):
@@ -38,12 +38,14 @@ def download_video(url, file_name) -> None:
     print("Video downloaded successfully!")
 
 
-def download_twitter_video(url):
+def download_twitter_video(url, video_destination):
     """Extract the highest quality video url to download into a file
 
     Args:
         url (str): The twitter post URL to download from
     """
+
+    assert os.path.exists(video_destination), "The video destination does not exist!"
 
     api_url = f"https://twitsave.com/info?url={url}"
 
@@ -54,8 +56,16 @@ def download_twitter_video(url):
     highest_quality_url = quality_buttons[0].get("href") # Highest quality video url
     
     file_name = data.find_all("div", class_="leading-tight")[0].find_all("p", class_="m-2")[0].text # Video file name
-    file_name = re.sub(r"[^a-zA-Z0-9]+", ' ', file_name).strip() + ".mp4" # Remove special characters from file name
-    
-    download_video(highest_quality_url, file_name)
 
-    return file_name
+    file_name = re.sub(r"[^a-zA-Z0-9]+", ' ', file_name).strip() # Remove special characters from file name
+
+    # if the file name is empty, generate a random name
+
+    if not file_name:
+        file_name = "video"
+
+    file_name = file_name + ".mp4"  # Append the file extension
+    
+    download_video(highest_quality_url, file_name, video_destination)
+
+    return f"{video_destination}/{file_name}"
