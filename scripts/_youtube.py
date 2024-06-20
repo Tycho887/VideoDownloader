@@ -2,15 +2,45 @@ import yt_dlp
 import os
 import sys
 
-# Add the 
 
-def download_youtube_video(url, video_destination):
-    # Define the options for yt-dlp
-    ydl_opts = {
-        'outtmpl': 'downloads/%(title)s.%(ext)s',
-        'format': 'bestvideo+bestaudio/best',
-        'merge_output_format': 'mp4',
-    }
+class params:
+
+    def __init__(self, url, destination, format):
+        assert os.path.exists(destination), "The video destination does not exist!"
+        assert format in ["mp4", "mp3", "mkv", "webm", "wav", "mov"], "Invalid format! Supported formats are: mp4, mkv, webm, mp3, wav, mov"
+        self.url = url
+        self.destination = destination
+        self.format = format
+
+        self.get_ydl_opts()
+
+    def get_ydl_opts(self):
+        # For each format, define the options for yt-dlp
+        if self.format in ["mp4", "mkv", "webm", "mov"]:
+            self.ydl_opts = {
+                'outtmpl': f'{self.destination}/%(title)s.%(ext)s',
+                'format': 'bestvideo+bestaudio/best',
+                'merge_output_format': self.format,
+            }
+            self.backup_format = "mp4"
+        
+        elif self.format in ["mp3", "wav"]:
+            self.ydl_opts = {
+                'outtmpl': f'{self.destination}/%(title)s.%(ext)s',
+                'format': 'bestaudio/best',
+                'postprocessors': [{
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcodec': self.format,
+                    'preferredquality': '192',
+                }]
+            }
+            self.backup_format = "mp3"
+
+        
+
+def download_youtube_video(url, video_destination, format="mp4"):
+
+    ydl_opts = params(url, video_destination, format).ydl_opts
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
