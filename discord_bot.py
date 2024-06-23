@@ -3,6 +3,7 @@ import discord
 from scripts import download_youtube_video, download_twitter_video
 from API_key.token import DISCORD_BOT_TOKEN
 import os
+from scripts import download_video
 
 CHANNEL_ID = 1252712820567703582
 
@@ -13,14 +14,6 @@ async def on_ready():
     print("Bot is ready")
     channel = bot.get_channel(CHANNEL_ID)
     await channel.send("Bot is ready")
-
-def download_video(url):
-    file_name = None
-    if "youtube" in url:
-        file_name = download_youtube_video(url)
-    elif "twitter" in url:
-        file_name = download_twitter_video(url)
-    return file_name
 
 @bot.command()
 async def download(ctx, url):
