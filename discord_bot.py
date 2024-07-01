@@ -1,9 +1,8 @@
 from discord.ext import commands
 import discord
-from scripts import download_youtube_video, download_twitter_video
+from scripts import download_media, supported_formats, convert_to_gif
 from API_key.token import DISCORD_BOT_TOKEN
 import os
-from scripts import download_video
 
 CHANNEL_ID = 1252712820567703582
 
@@ -16,17 +15,60 @@ async def on_ready():
     await channel.send("Bot is ready")
 
 @bot.command()
-async def download(ctx, url):
-    await ctx.send("Downloading video...")
-    file_name = download_video(url)
-    if file_name:
-        await ctx.send(f"Video downloaded successfully as {file_name}")
-        if os.path.exists(file_name):
-            try:
-                await ctx.send(file=discord.File(file_name))
-            except discord.errors.HTTPException as e:
-                await ctx.send(f"Error sending file: {e}")
-    else:
-        await ctx.send("Failed to download the video.")
+async def ping(ctx):
+    await ctx.send("Pong!")
+
+async def send_file(ctx, file_name):
+    try:
+        assert os.path.exists(file_name), "The file does not exist!"
+        assert os.path.isfile(file_name), "The file is not a file!"
+        assert file_name.endswith(supported_formats), "The file is not a supported format!"
+
+        await ctx.send(file=discord.File(file_name))
+        # remove the file after sending
+        os.remove(file_name)
+    except discord.errors.HTTPException as e:
+        print(f"Error sending file: {e}")
+        await ctx.send(f"Error sending file: {e}")
+        return
+    except AssertionError as e:
+        print(f"Error sending file: {e}")
+        await ctx.send(f"Error sending file: {e}")
+        return
+    except FileNotFoundError as e:
+        print(f"Error sending file: {e}")
+        await ctx.send(f"Error sending file: {e}")
+        return
+
+@bot.command()
+async def download(ctx, url, format = 'mp4', tStart = None, tEnd = None):
+
+    GIF = False
+    if format.lower() == "gif":
+        format = "mp4"
+        GIF = True
+
+    await ctx.send("Downloading media...")
+    try:
+        file_name = download_media(url, format)
+    except ValueError as e:
+        await ctx.send(f"Failed safety checks: {e}")
+        return
+    except Exception as e:
+        await ctx.send(f"Error downloadingo: {e}")
+        return
+    
+    await ctx.send(f"Downloaded successfully")
+
+    if GIF:
+        await ctx.send("Converting to GIF...")
+        try:
+            file_name = convert_to_gif(file_name, tStart, tEnd)
+        except Exception as e:
+            await ctx.send(f"Error converting to GIF: {e}")
+            return
+        await ctx.send(f"Converted successfully")
+
+    await send_file(ctx, file_name)
 
 bot.run(DISCORD_BOT_TOKEN)

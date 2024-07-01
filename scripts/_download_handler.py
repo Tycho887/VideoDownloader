@@ -1,19 +1,21 @@
-from scripts._youtube import download_youtube_video
+from scripts._youtube import youtube_downloader
 from scripts._twitter import download_twitter_video
 import os
 
-def download_video(url, format):
+supported_formats = ('mp4', 'mkv', 'mpeg', 'wav', 'mp3', 'gif')
 
-    video_destination = "downloads"
+def download_media(url, format = 'mp4'):
 
-    if not os.path.exists(video_destination):
-        os.makedirs(video_destination)
+    destination = "downloads"
+
+    if not os.path.exists(destination):
+        os.makedirs(destination)
 
     file_name = None
     if "youtube" in url or "youtu.be" in url:
-        file_name = download_youtube_video(url, video_destination, format)
+        file_name = youtube_downloader(url, destination, format)
     elif "x.com" in url:
-        file_name = download_twitter_video(url, video_destination)
+        file_name = download_twitter_video(url, destination)
     else:
         pass
     return file_name

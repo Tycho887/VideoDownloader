@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import yt_dlp
 
+
 def set_ydl_opts(format):
     vidformats = ['mp4', 'mkv', 'mpeg']
     audformats = ['wav', 'mp3']
@@ -42,100 +43,46 @@ def set_ydl_opts(format):
 
     return ydl_opts
 
+def verify_media(info_dict):
 
-def check_valid_url(url, max_duration=600, max_size=25):
-    """
-    Check if the URL is valid based on duration and size constraints.
+    print("Verifying...")
 
-    Args:
-    - url (str): The URL to check.
-    - max_duration (int): Maximum duration in seconds. Default is 600 (10 minutes).
-    - max_size (float): Maximum file size in megabytes. If None, no size check is performed.
-
-    Returns:
-    - bool: True if the URL meets the requirements, False otherwise.
-    """
-    try:
-        with yt_dlp.YoutubeDL() as ydl:
-            info_dict = ydl.extract_info(url, download=False)
-            
-            # Check if URL is a playlist
-            if 'entries' in info_dict:
-                raise ValueError("The provided URL is a playlist, which is not supported.")
-            
-            # Check if the video duration exceeds the maximum allowed duration
-            if info_dict.get('duration', 0) > max_duration:
-                raise ValueError(f"The video is longer than {max_duration} seconds, which is not supported.")
-            
-            # Check if the video is a live stream
-            if info_dict.get('is_live', False):
-                raise ValueError("The video is a live stream, which is not supported.")
-            
-            # Check for invalid video IDs or removed videos
-            if 'title' not in info_dict or not info_dict['title']:
-                raise ValueError("The video is unavailable or removed.")
-            
-            # Check if the video size exceeds the maximum allowed size
-            if max_size is not None:
-                filesize_bytes = info_dict.get('filesize', None)
-                if filesize_bytes is None:
-                    # Try to estimate the file size if exact size is not available
-                    filesize_bytes = info_dict.get('filesize_approx', None)
-                
-                if filesize_bytes is not None:
-                    filesize_mb = filesize_bytes / (1024 * 1024)  # Convert bytes to megabytes
-                    if filesize_mb > max_size:
-                        raise ValueError(f"The video file size is {filesize_mb:.2f} MB, which exceeds the limit of {max_size} MB.")
-                else:
-                    print("Warning: Unable to determine file size. Skipping size check.")
-
-    except yt_dlp.DownloadError as e:
-        print(f"DownloadError: {e}")
-        return False
-    except yt_dlp.utils.ExtractorError as ee:
-        print(f"ExtractorError: {ee}")
-        return False
-    except KeyError as ke:
-        print(f"KeyError: {ke}")
-        return False
-    except ValueError as ve:
-        print(f"ValueError: {ve}")
-        return False
-    except Exception as ex:
-        print(f"An unexpected error occurred: {ex}")
-        return False
+    max_size = 24
     
-    print("Valid URL")
-    return True
+    filesize_mb = (info_dict.get('filesize') or info_dict.get('filesize_approx')) / (1024 * 1024)  # Convert bytes to megabytes
 
-def send_download_request(url, video_destination, ydl_opts):
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info_dict = ydl.extract_info(url, download=False)
-            video_title = info_dict.get('title', None)
-            video_ext = info_dict.get('ext', f'{format}')
-            video_filename = f'{video_destination}/{video_title}.{video_ext}'
-            info_dict = ydl.extract_info(url, download=True)
-    except yt_dlp.DownloadError as e:
-        print(f"An error occurred: {e}")
-        return None
-    except ValueError as ve:
-        print(f"An error occurred: {ve}")
-        return None
+    error_messages = {
+        'playlist': "The provided URL is a playlist, which is not supported.",
+        'live': "The url is a live stream, which is not supported.",
+        'unavailable': "The video is unavailable or removed.",
+        'size': lambda size: f"The file size is {size:.2f} MB, which exceeds the limit of {max_size} MB."
+    }
 
-    print(f"Downloaded: {video_filename}")
-    return video_filename
+    # Check for unsupported conditions
+    if 'entries' in info_dict:
+        raise ValueError(error_messages['playlist'])
+    if info_dict.get('is_live', False):
+        raise ValueError(error_messages['live'])
+    if not info_dict.get('title'):
+        raise ValueError(error_messages['unavailable'])
+    if filesize_mb > max_size:
+        raise ValueError(error_messages['size'](filesize_mb))
 
-
-
-def download_youtube_video(url, video_destination, format='mp4'):
+def youtube_downloader(url, destination, format):
     
     ydl_opts = set_ydl_opts(format)
 
-    if ydl_opts is None:
-        return None
-    
-    if check_valid_url(url):
-        return send_download_request(url, video_destination, ydl_opts)
-    else:
-        return None
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        print("Extracting video information...")
+        info_dict = ydl.extract_info(url, download=False)
+
+        verify_media(info_dict)
+
+        title = info_dict.get('title', None)
+
+        filename = f'{destination}/{title}.{format}'
+
+        ydl.download([url])
+
+    print(f"Downloaded: {filename}")
+    return filename

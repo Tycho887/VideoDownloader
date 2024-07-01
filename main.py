@@ -9,5 +9,3 @@ if __name__ == "__main__":
         url = str_in
         format = 'mp4'
     download_video(url, format)
-
-
