@@ -4,7 +4,7 @@ from scripts import download_media, supported_formats, convert_to_gif
 from API_key.token import DISCORD_BOT_TOKEN
 import os
 
-CHANNEL_ID = 1252712820567703582
+CHANNEL_ID = 1257450460730753147 #1252712820567703582
 
 bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
 

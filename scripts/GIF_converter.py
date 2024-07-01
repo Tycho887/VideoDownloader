@@ -1,6 +1,6 @@
 from moviepy.editor import VideoFileClip, vfx
 
-def convert_to_gif(video_path, start_time, end_time, max_frames=100):
+def convert_to_gif(video_path, start_time, end_time, max_frames=50):
     """Convert a video to a GIF with a maximum of 50 frames.
 
     Args:
@@ -15,7 +15,8 @@ def convert_to_gif(video_path, start_time, end_time, max_frames=100):
     gif_path = video_path.replace(video_path.split('.')[-1], 'gif')
 
     # Convert start_time and end_time to float and create a subclip
-    video = video.subclip(float(start_time), float(end_time))
+    if start_time is not None and end_time is not None:
+        video = video.subclip(float(start_time), float(end_time))
 
     # Ensure the video is no longer than 30 seconds
     assert video.duration <= 30, "The video is too long to convert to a GIF"
