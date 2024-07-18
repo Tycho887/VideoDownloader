@@ -1,5 +1,5 @@
-from scripts._youtube import youtube_downloader
-from scripts._twitter import download_twitter_video
+from ._youtube import youtube_downloader
+from ._twitter import download_twitter_video
 import os
 
 supported_formats = ('mp4', 'mkv', 'mpeg', 'wav', 'mp3', 'gif')

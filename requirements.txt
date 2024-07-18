@@ -6,3 +6,5 @@ discord.py
 ffmpeg
 yt-dlp
 moviepy
+pynacl
+youtube_dl
