@@ -3,18 +3,13 @@ import discord
 from scripts.downloaders import download_media, supported_formats, convert_to_gif
 from API_key.token import DISCORD_BOT_TOKEN
 import os
-# import youtube_dl
-# import asyncio
 
-CHANNEL_ID = 1257450460730753147 #1252712820567703582
-
+# Create an instance of a bot with all intents enabled
 bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
 
 @bot.event
 async def on_ready():
     print("Bot is ready")
-    channel = bot.get_channel(CHANNEL_ID)
-    await channel.send("Bot is ready")
 
 @bot.command()
 async def ping(ctx):
@@ -70,6 +65,7 @@ async def download(ctx, url, format='mp4', tStart=None, tEnd=None):
         await ctx.send("Converted successfully")
 
     await send_file(ctx, file_name)
+
 
 # @bot.command()
 # async def join(ctx):
