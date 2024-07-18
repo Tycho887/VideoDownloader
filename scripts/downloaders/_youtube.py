@@ -35,10 +35,9 @@ def set_ydl_opts(format):
             'prefer_ffmpeg': True,
             'keepvideo': False
         }
-    else:
-        print(f"Unsupported format: {format}")
-        return None
-    
+    else:        
+        raise ValueError(f"Unsupported format: {format}")
+            
     print(f"Set ydl_opts for format: {format}")
 
     return ydl_opts
