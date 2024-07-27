@@ -15,6 +15,10 @@ async def on_ready():
 async def ping(ctx):
     await ctx.send("Pong!")
 
+@bot.command()
+async def guide(ctx):
+    await ctx.send("Commands: !ping, !guide, !download <url> <format> <start> <end>")
+
 async def send_file(ctx, file_name):
     try:
         assert os.path.exists(file_name), "The file does not exist!"
@@ -64,7 +68,7 @@ async def download(ctx, url, format='mp4', start=None, end=None):
         assert isinstance(start, (int, float)) or start is None, "Invalid start time"
         assert isinstance(end, (int, float)) or end is None, "Invalid end time"
     except AssertionError as e:
-        await ctx.send(f"Failed safety checks: {e}")
+        await ctx.send(f"Input format is: !download <url> <format> <start> <end>")
         return
 
     await ctx.send("Downloading media...")
