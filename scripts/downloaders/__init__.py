@@ -1,2 +1,2 @@
-from ._download_handler import download_media, supported_formats
-from .GIF_converter import convert_to_gif
+from ._youtube import youtube_downloader as download_youtube_video
+from ._twitter import download_twitter_video
