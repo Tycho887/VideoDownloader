@@ -9,7 +9,7 @@ bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
 
 @bot.event
 async def on_ready():
-    print("Bot is ready")
+    print(f"Bot is ready, logged in as {bot.user}")
 
 @bot.command()
 async def ping(ctx):
