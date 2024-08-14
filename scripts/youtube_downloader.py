@@ -3,7 +3,6 @@ import yt_dlp
 import os
 import sys
 
-# Add the 
 
 vidformats = ['mp4', 'mkv', 'mpeg']
 audformats = ['wav', 'mp3']
@@ -12,7 +11,7 @@ def download_youtube_video(url, format, video_destination):
     # Define the options for yt-dlp
     if format in vidformats:
         ydl_opts = {
-            'outtmpl': 'downloads/%(title)s.%(ext)s',
+            'outtmpl': f'{video_destination}/%(title)s.%(ext)s',
             'format': 'bestvideo+bestaudio/best',
             #'merge_output_format': f'{format}',
             'postprocessors': [{
@@ -22,7 +21,7 @@ def download_youtube_video(url, format, video_destination):
         }
     elif format in audformats:
         ydl_opts = {
-            'outtmpl': 'downloads/%(title)s.%(ext)s',
+            'outtmpl': f'{video_destination}/%(title)s.%(ext)s',
             'format': 'bestaudio/best',
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
