@@ -2,6 +2,5 @@ __future__
 requests
 tqdm
 bs4
-discord.py
 ffmpeg
 yt-dlp
