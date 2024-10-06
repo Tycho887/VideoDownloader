@@ -12,9 +12,10 @@ import bs4
 
 from tqdm import tqdm
 from pathlib import Path
+import time
 
 
-def download_video(url, file_name, video_destination) -> None:
+def download_video(url, video_destination, file_name) -> None:
     """Download a video from a URL into a filename.
 
     Args:
@@ -54,18 +55,11 @@ def download_twitter_video(url, video_destination):
     download_button = data.find_all("div", class_="origin-top-right")[0]
     quality_buttons = download_button.find_all("a")
     highest_quality_url = quality_buttons[0].get("href") # Highest quality video url
+
+    # file name should be media + timestamp
+
+    file_name = "twitter_media" + str(int(time.time())) + ".mp4" # Video file name
     
-    file_name = data.find_all("div", class_="leading-tight")[0].find_all("p", class_="m-2")[0].text # Video file name
-
-    file_name = re.sub(r"[^a-zA-Z0-9]+", ' ', file_name).strip() # Remove special characters from file name
-
-    # if the file name is empty, generate a random name
-
-    if not file_name:
-        file_name = "video"
-
-    file_name = file_name + ".mp4"  # Append the file extension
-    
-    download_video(highest_quality_url, file_name, video_destination)
+    download_video(highest_quality_url, video_destination, file_name)
 
     return f"{video_destination}/{file_name}"
