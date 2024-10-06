@@ -1,4 +1,3 @@
-__future__
 requests
 tqdm
 bs4
