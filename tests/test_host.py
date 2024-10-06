@@ -13,3 +13,13 @@ def test_extern_status():
     HOST = "https://twitsave.com"
     response = requests.head(HOST)
     assert response.status_code == 200
+
+# Test youtube.com
+
+@pytest.mark.integration
+def test_youtube_status():
+    """Get hosting status of youtube.com"""
+
+    HOST = "https://youtube.com"
+    response = requests.head(HOST)
+    assert response.status_code == 301

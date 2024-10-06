@@ -6,3 +6,5 @@ downloads/*
 myenv/**
 __pycache__/**
 API_key/*
+.vscode/*
+test.py

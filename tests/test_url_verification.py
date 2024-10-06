@@ -12,3 +12,15 @@ def test_domain_valid():
     parsed_url = urlparse(url)
 
     assert parsed_url.hostname == "x.com"
+
+# Same test but for youtube.com
+
+@pytest.mark.unit
+def test_domain_valid():
+    """Assert the site is equal to youtube.com"""
+    url = "https://www.youtube.com/watch?v=-XpJeDGh8No"
+
+    parsed_url = urlparse(url)
+
+    assert parsed_url.hostname == "www.youtube.com"
+
