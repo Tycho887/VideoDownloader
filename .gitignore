@@ -3,3 +3,6 @@ downloads/*
 */.ipynb_checkpoints/*
 */.DS_Store
 */.vscode
+myenv/**
+__pycache__/**
+API_key/*
