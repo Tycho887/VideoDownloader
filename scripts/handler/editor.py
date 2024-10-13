@@ -5,13 +5,14 @@ import time
 
 class MediaEditor:
 
-    def __init__(self, media_path, start_time, end_time, target_format) -> None:
-
+    def __init__(self, media_path, start_time, end_time, target_format, resolution=None) -> None:
         assert os.path.exists(media_path), f"File does not exist: {media_path}"
         assert target_format in ["gif", "mp4", "mp3"], f"Unsupported format: {target_format}"
         assert start_time is None or start_time >= 0, f"Invalid start time: {start_time}"
         assert end_time is None or end_time >= 0, f"Invalid end time: {end_time}"
-
+        if resolution:
+            assert isinstance(resolution, tuple) and len(resolution) == 2, "Resolution must be a tuple (width, height)"
+        
         self.source_media_path = media_path
         self.start_time = start_time
         self.end_time = end_time
@@ -19,6 +20,7 @@ class MediaEditor:
         self.max_size = 24 # MB
         self.result_path = None
         self.generated_files = [media_path]
+        self.resolution = resolution  # Store resolution for resizing
 
         if target_format in ["mp4", "gif"]:
             self.source_media = VideoFileClip(media_path)
@@ -29,6 +31,8 @@ class MediaEditor:
 
     def run(self):
         self._clip_media()
+        if self.resolution and self.target_format in ["mp4", "gif"]:
+            self._resize_media()
         self.export_media()
         if self.file_too_large():
             raise ValueError(f"File size too large: {os.path.getsize(self.result_path) / (1024 ** 2):.1f} MB")
@@ -43,6 +47,18 @@ class MediaEditor:
 
         if self.start_time is not None and self.end_time is not None:
             self.source_media = self.source_media.subclip(float(self.start_time), float(self.end_time))
+
+    def _resize_media(self):
+        """Resize the video to the target resolution."""
+        print("Resizing media")
+
+        if self.resolution[1] is None:
+            # Maintain aspect ratio
+            aspect_ratio = self.source_media.size[1] / self.source_media.size[0]
+            height = int(self.resolution[0] * aspect_ratio)
+            self.resolution = (self.resolution[0], height)
+        
+        self.source_media = self.source_media.resize(height=self.resolution[1], width=self.resolution[0])
 
     def _convert_to_gif(self):
         video_length = self.source_media.duration
