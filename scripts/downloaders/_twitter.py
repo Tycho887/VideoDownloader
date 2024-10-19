@@ -56,10 +56,15 @@ def download_twitter_video(url, video_destination):
     quality_buttons = download_button.find_all("a")
     highest_quality_url = quality_buttons[0].get("href") # Highest quality video url
 
-    # file name should be media + timestamp
+    #file name should be media + timestamp
 
     file_name = "twitter_media" + str(int(time.time())) + ".mp4" # Video file name
     
     download_video(highest_quality_url, video_destination, file_name)
 
     return f"{video_destination}/{file_name}"
+
+if __name__ == "__main__":
+    url = "https://x.com/i/status/1840104191286538595"
+    video_destination = "../../downloads"
+    download_twitter_video(url, video_destination)
