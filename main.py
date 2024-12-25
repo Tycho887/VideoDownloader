@@ -1,8 +1,11 @@
 from discord.ext import commands
 import discord
-from scripts.handler import download_media, supported_formats
-from API_key.token import DISCORD_BOT_TOKEN
+from lib.handler import download_media, supported_formats
+# from API_key.token import DISCORD_BOT_TOKEN
+from lib.utils import get_bot_token
 import os
+
+DISCORD_BOT_TOKEN = get_bot_token()
 
 # Create an instance of a bot with all intents enabled
 bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())

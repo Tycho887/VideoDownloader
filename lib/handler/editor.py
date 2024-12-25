@@ -1,6 +1,6 @@
-from scripts.downloaders import download_youtube_video, download_twitter_video
+from lib.downloaders import download_youtube_video, download_twitter_video
 import os
-from moviepy.editor import VideoFileClip, vfx, AudioFileClip
+from moviepy import *
 import time
 
 class MediaEditor:
@@ -17,7 +17,7 @@ class MediaEditor:
         self.start_time = start_time
         self.end_time = end_time
         self.target_format = target_format
-        self.max_size = 24 # MB
+        self.max_size = 10 # MB
         self.result_path = None
         self.generated_files = [media_path]
         self.resolution = resolution  # Store resolution for resizing
