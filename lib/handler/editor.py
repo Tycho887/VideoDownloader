@@ -1,6 +1,7 @@
 from lib.downloaders import download_youtube_video, download_twitter_video
 import os
 from moviepy import *
+from moviepy.video.io.VideoFileClip import VideoFileClip
 import time
 
 class MediaEditor:

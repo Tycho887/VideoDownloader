@@ -1,7 +1,7 @@
 from lib.downloaders import download_youtube_video, download_twitter_video
 from lib.handler.editor import MediaEditor
 import os
-from moviepy import VideoFileClip
+from moviepy.video.io.VideoFileClip import VideoFileClip
 
 supported_formats = ("mp4", "mp3", "gif")
 
