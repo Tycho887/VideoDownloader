@@ -1,8 +1,11 @@
 from discord.ext import commands
 import discord
-from vidlib import get_bot_token, download_media, supported_formats, extract_arguments, remove_files, remove_file, MAX_size
+# from lib import get_bot_token, download_media, supported_formats, extract_arguments, remove_files, remove_file, MAX_size
+from lib import *
 import os
 import logging
+
+
 
 # Setup logging
 logging.basicConfig(
@@ -39,7 +42,7 @@ async def send_file(ctx, file_name):
     logging.info(f"Attempting to send file: {file_name}")
     assert os.path.exists(file_name), "The file does not exist!"
     assert os.path.isfile(file_name), "The file is not a file!"
-    assert file_name.endswith(supported_formats), "The file is not a supported format!"
+    assert file_name.endswith(SUPPORTED_FORMATS), "The file is not a supported format!"
     
     with open(file_name, 'rb') as file:
         await ctx.send(file=discord.File(file, file_name))
@@ -49,50 +52,50 @@ async def send_file(ctx, file_name):
 async def download(ctx, *, args):
     logging.info("Download command received with arguments: %s", args)
     
-    try:
+    # try:
+    if True:
+
+        # Extract arguments
         url, options = extract_arguments(args)
 
-        assert url is not None, "A valid URL must be provided."
-        format = options['format']
-        assert format in supported_formats, f"format '{format}' is unsupported, choose one of {supported_formats}"
+        # Perform validations
+        validate_url(url)
+        format = options['format'].lower()
+        validate_format(format)
 
-        start = float(options['start']) if options['start'] is not None else None
-        end = float(options['end']) if options['end'] is not None else None
+        start = float(options['start']) if options['start'] else None
+        end = float(options['end']) if options['end'] else None
+        validate_times(start, end)
 
-        print(start, end)
+        resolution = options['resolution']
+        if resolution:
+            validate_resolution(resolution)
+            resolution_tuple = tuple(map(int, resolution.split('x')))
+        else:
+            resolution_tuple = None
 
-        if start is not None:
-            assert start >= 0, f"Invalid start time: {start}"
-        if end is not None:
-            assert end >= 0, f"Invalid end time: {end}"
-        if start is not None and end is not None:
-            assert start < end, f"Start time must be less than end time. Got start={start}, end={end}"
-        
-        resolution_tuple = None
-        if options['resolution']:
-            assert len(options['resolution'].split('x')) == 2, "Invalid resolution format. Use <width>x<height>"
-            assert all(x.isdigit() for x in options['resolution'].split('x')), "Resolution values must be integers."
-            assert all(int(x) > 0 for x in options['resolution'].split('x')), "Resolution values must be positive."
-            assert all(int(x) <= MAX_size for x in options['resolution'].split('x')), f"Resolution values must be less than or equal to {MAX_size}"
-            resolution_tuple = tuple(map(int, options['resolution'].split('x')))
-
+        # Proceed with download and processing
         await ctx.send("Downloading media...")
         logging.info("Downloading media with options: %s", options)
 
-        file_name, generated_files = download_media(url=url, target_format=format, start_time=start, end_time=end, resolution=resolution_tuple)
+        file_name, generated_files = download_media(
+            url=url, target_format=format, start_time=start, end_time=end, resolution=resolution_tuple
+        )
 
-        assert os.path.exists(file_name), f"File does not exist: {file_name}"
-        logging.info("Media downloaded successfully: %s", file_name)
-
-        await ctx.send("Downloaded successfully")
         await send_file(ctx, file_name)
-
-        await discord.utils.sleep_until(discord.utils.utcnow())
         remove_file(file_name)
         logging.info("Temporary file removed: %s", file_name)
+    try:
+        pass
 
     except Exception as e:
         logging.error("Error during download: %s", str(e))
-        await ctx.send(f"An error occurred: \n{e}")
+        await ctx.send(f"An error occurred: {e}")
+    
+    finally:
+
+        # Clean up
+        remove_files()
+
 
 bot.run(DISCORD_BOT_TOKEN)

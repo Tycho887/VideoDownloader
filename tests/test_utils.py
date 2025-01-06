@@ -1,7 +1,7 @@
 import pytest
 import os
 
-from vidlib import (
+from lib import (
     get_source,
     process_media,
     download_media,
@@ -26,7 +26,7 @@ def test_get_source_twitter():
 
 def test_get_source_invalid():
     url = "https://example.com"
-    with pytest.raises(ValueError, match="Unsupported source:"):
+    with pytest.raises(ValueError, match="Unsupported URL source. Supported sources are YouTube and Twitter."):
         get_source(url)
 
 def test_extract_arguments():
@@ -43,7 +43,7 @@ def test_process_media_invalid_file():
         process_media("nonexistent_file.mp4", 0, 10, "mp4")
 
 def test_process_media_invalid_format():
-    with pytest.raises(ValueError, match="Unsupported format: avi"):
+    with pytest.raises(ValueError, match=f"unsupported format: avi"):
         process_media("tests/data/test.mp4", 0, 10, "avi")
 
 def test_download_media_invalid_url():
