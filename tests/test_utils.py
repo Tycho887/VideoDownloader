@@ -1,8 +1,8 @@
 import pytest
 import os
-from lib import (
+
+from vidlib import (
     get_source,
-    download_media_from_url,
     process_media,
     download_media,
     remove_files,
@@ -43,8 +43,8 @@ def test_process_media_invalid_file():
         process_media("nonexistent_file.mp4", 0, 10, "mp4")
 
 def test_process_media_invalid_format():
-    with pytest.raises(ValueError, match="Unsupported format:"):
-        process_media("test.mp4", 0, 10, "avi")
+    with pytest.raises(ValueError, match="Unsupported format: avi"):
+        process_media("tests/data/test.mp4", 0, 10, "avi")
 
 def test_download_media_invalid_url():
     with pytest.raises(ValueError, match="URL is required"):

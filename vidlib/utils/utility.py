@@ -4,8 +4,8 @@ import time
 import moviepy.video.fx.all as vfx
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from moviepy.audio.io.AudioFileClip import AudioFileClip
-from lib.downloaders.twitter import download_twitter_video
-from lib.downloaders.youtube import youtube_downloader as download_youtube_video
+from vidlib.downloaders.twitter import download_twitter_video
+from vidlib.downloaders.youtube import youtube_downloader as download_youtube_video
 from moviepy.video.fx import resize
 import re
 
@@ -92,7 +92,7 @@ def process_media(media_path, start_time, end_time, target_format, resolution=No
             generated_files.append(result_path)
 
     else:
-        raise ValueError(f"Unsupported target format: {target_format}")
+        raise ValueError("Unsupported target format")
 
     # Check file size
     file_size_mb = os.path.getsize(result_path) / (1024 ** 2)

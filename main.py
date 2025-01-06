@@ -1,6 +1,6 @@
 from discord.ext import commands
 import discord
-from lib import get_bot_token, download_media, supported_formats, extract_arguments, remove_files
+from vidlib import get_bot_token, download_media, supported_formats, extract_arguments, remove_files
 import os
 
 DISCORD_BOT_TOKEN = get_bot_token()
