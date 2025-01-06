@@ -2,7 +2,10 @@ from lib.downloaders import download_youtube_video, download_twitter_video
 import os
 from moviepy import *
 from moviepy.video.io.VideoFileClip import VideoFileClip
+from moviepy.audio.io.AudioFileClip import AudioFileClip
 import time
+from moviepy.video.fx import resize
+from moviepy.video import fx
 
 class MediaEditor:
 
@@ -27,6 +30,8 @@ class MediaEditor:
             self.source_media = VideoFileClip(media_path)
         elif target_format == "mp3":
             self.source_media = AudioFileClip(media_path)
+        else:
+            raise ValueError(f"Unsupported format: {target_format}")
 
         self.run()
 
@@ -59,7 +64,8 @@ class MediaEditor:
             height = int(self.resolution[0] * aspect_ratio)
             self.resolution = (self.resolution[0], height)
         
-        self.source_media = self.source_media.resize(height=self.resolution[1], width=self.resolution[0])
+        # Apply the resize effect
+        self.source_media = self.source_media.fx(resize.resize, newsize=self.resolution)
 
     def _convert_to_gif(self):
         video_length = self.source_media.duration
