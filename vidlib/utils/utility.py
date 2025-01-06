@@ -47,7 +47,7 @@ def process_media(media_path, start_time, end_time, target_format, resolution=No
     if not os.path.exists(media_path):
         raise FileNotFoundError(f"File does not exist: {media_path}")
     if target_format not in SUPPORTED_FORMATS:
-        raise ValueError(f"Unsupported format: {target_format}")
+        raise ValueError(f"format '{format}' is unsupported, choose one of {SUPPORTED_FORMATS}")
     if start_time is not None and start_time < 0:
         raise ValueError(f"Invalid start time: {start_time}")
     if end_time is not None and end_time < 0:
@@ -133,7 +133,7 @@ def convert_to_gif(video_clip, result_path):
 
 def download_media(url, target_format, start_time=None, end_time=None, resolution=None):
     if target_format not in SUPPORTED_FORMATS:
-        raise ValueError(f"Unsupported format: {target_format}")
+        raise ValueError(f"Unsupported format: {target_format} \n Supported formats: {SUPPORTED_FORMATS}")
     if not url:
         raise ValueError("URL is required")
 

@@ -1,6 +1,6 @@
 from discord.ext import commands
 import discord
-from vidlib import get_bot_token, download_media, supported_formats, extract_arguments, remove_files, remove_file
+from vidlib import get_bot_token, download_media, supported_formats, extract_arguments, remove_files, remove_file, MAX_size
 import os
 import logging
 
@@ -54,20 +54,27 @@ async def download(ctx, *, args):
 
         assert url is not None, "A valid URL must be provided."
         format = options['format']
-        assert format in supported_formats, f"Unsupported format: {format}"
+        assert format in supported_formats, f"format '{format}' is unsupported, choose one of {supported_formats}"
 
         start = float(options['start']) if options['start'] is not None else None
         end = float(options['end']) if options['end'] is not None else None
+
+        print(start, end)
+
+        if start is not None:
+            assert start >= 0, f"Invalid start time: {start}"
+        if end is not None:
+            assert end >= 0, f"Invalid end time: {end}"
+        if start is not None and end is not None:
+            assert start < end, f"Start time must be less than end time. Got start={start}, end={end}"
         
         resolution_tuple = None
         if options['resolution']:
-            resolution_values = [int(x) for x in options['resolution'].split('x')]
-            if len(resolution_values) == 1:
-                resolution_tuple = (resolution_values[0], None)  # Keep aspect ratio
-            elif len(resolution_values) == 2:
-                resolution_tuple = (resolution_values[0], resolution_values[1])  # Full resize
-            else:
-                raise ValueError("Invalid resolution format. Use <width>x<height> or just <width>.")
+            assert len(options['resolution'].split('x')) == 2, "Invalid resolution format. Use <width>x<height>"
+            assert all(x.isdigit() for x in options['resolution'].split('x')), "Resolution values must be integers."
+            assert all(int(x) > 0 for x in options['resolution'].split('x')), "Resolution values must be positive."
+            assert all(int(x) <= MAX_size for x in options['resolution'].split('x')), f"Resolution values must be less than or equal to {MAX_size}"
+            resolution_tuple = tuple(map(int, options['resolution'].split('x')))
 
         await ctx.send("Downloading media...")
         logging.info("Downloading media with options: %s", options)
