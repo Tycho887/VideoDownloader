@@ -9,3 +9,4 @@ pynacl
 youtube_dl
 opencv-python
 python-dotenv
+pytest
