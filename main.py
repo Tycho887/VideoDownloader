@@ -33,7 +33,7 @@ async def ping(ctx):
 @bot.command()
 async def guide(ctx):
     logging.info("Guide command received.")
-    await ctx.send("Commands: !ping, !guide, !download <url> <format> <start> <end> <resolution (optional)>")
+    await ctx.send("Commands: !ping, !guide, !download <url> [format=<format>] [start=<start>] [end=<end>] [resolution=<resolution>]")
 
 async def send_file(ctx, file_name):
     logging.info(f"Attempting to send file: {file_name}")
