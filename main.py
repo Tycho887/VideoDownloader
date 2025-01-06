@@ -50,8 +50,7 @@ async def send_file(ctx, file_name):
 async def download(ctx, *, args):
     logging.info("Download command received with arguments: %s", args)
     
-    # try:
-    if True:
+    try:
 
         # Extract arguments
         url, options = extract_arguments(args)
@@ -83,8 +82,6 @@ async def download(ctx, *, args):
         await send_file(ctx, file_name)
         remove_file(file_name)
         logging.info("Temporary file removed: %s", file_name)
-    try:
-        pass
 
     except Exception as e:
         logging.error("Error during download: %s", str(e))
