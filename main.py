@@ -5,8 +5,6 @@ from lib import *
 import os
 import logging
 
-
-
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,  # Default log level
