@@ -195,8 +195,8 @@ def extract_arguments(args):
                 options[key] = value
             else:
                 continue
-
-    if key not in KNOWN_KEYS:
-        logging.warning(f"Unrecognized key in arguments: {key}")
+    for key in options:
+        if key not in KNOWN_KEYS:
+            logging.warning(f"Unrecognized key in arguments: {key}")
 
     return url, options
