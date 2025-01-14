@@ -7,19 +7,21 @@ from lib.downloaders.twitter import download_twitter_video
 from lib.downloaders.youtube import youtube_downloader as download_youtube_video
 from moviepy.video.fx import resize
 import re
-from lib.utils.constants import SUPPORTED_FORMATS, MAX_SIZE_MB, MAX_GIF_FRAMES, MAX_GIF_LENGTH, MAX_VIDEO_RESOLUTION, KNOWN_KEYS
+from lib.utils.constants import SUPPORTED_FORMATS, MAX_SIZE_MB, MAX_GIF_FRAMES, MAX_GIF_LENGTH, MAX_VIDEO_RESOLUTION, KNOWN_KEYS, DOWNLOAD_FOLDER as download_folder
 import logging
 
 
 def remove_files():
     # Remove all mp3, mp4, and gif files in the downloads folder
-    for file in os.listdir("downloads"):
+    for file in os.listdir(download_folder):
         if file.endswith(SUPPORTED_FORMATS):
-            os.remove(os.path.join("downloads", file))
+            os.remove(os.path.join(download_folder, file))
+
 
 def remove_file(file_path):
     if os.path.isfile(file_path) and file_path.endswith(SUPPORTED_FORMATS):
         os.remove(file_path)
+
 
 def get_source(url):
     if "youtube" in url or "youtu.be" in url:
@@ -30,12 +32,12 @@ def get_source(url):
         raise ValueError(f"Unsupported URL source. Supported sources are YouTube and Twitter.")
 
 
-def download_media_from_url(url, download_folder, target_format):
+def download_media_from_url(url, target_format):
     source = get_source(url)
     if source == "youtube":
-        return download_youtube_video(url, download_folder, target_format)
+        return download_youtube_video(url, target_format)
     elif source == "twitter":
-        return download_twitter_video(url, download_folder)
+        return download_twitter_video(url)
     else:
         raise ValueError(f"Unsupported source: {url}")
 
@@ -54,7 +56,7 @@ def process_media(media_path, start_time, end_time, target_format, resolution=No
             raise ValueError("Resolution must be a tuple (width, height)")
 
     generated_files = [media_path]
-    result_path = f"downloads/{os.path.basename(media_path)}_{int(time.time())}.{target_format}"
+    result_path = f"{download_folder}/{os.path.basename(media_path)}_{int(time.time())}.{target_format}"
 
     if target_format in ["mp4", "gif"]:
         with VideoFileClip(media_path) as source_media:
@@ -116,6 +118,9 @@ def process_media(media_path, start_time, end_time, target_format, resolution=No
 
 
 def convert_to_gif(video_clip, result_path):
+    """
+    Convert a video clip to a GIF file.
+    """
     video_length = video_clip.duration
     max_frames = MAX_GIF_FRAMES
     if video_length > MAX_GIF_LENGTH:
@@ -134,8 +139,7 @@ def download_media(url, target_format, start_time=None, end_time=None, resolutio
     if not url:
         raise ValueError("URL is required")
 
-    download_folder = "downloads"
-    result_path = download_media_from_url(url, download_folder, target_format)
+    result_path = download_media_from_url(url, target_format)
     if not os.path.exists(result_path):
         raise FileNotFoundError(f"{result_path} does not exist")
 
@@ -158,7 +162,6 @@ def download_media(url, target_format, start_time=None, end_time=None, resolutio
     return processed_result_path, generated_files
 
 
-
 def extract_arguments(args):
     """
     Extract arguments from a string using regex.
@@ -170,8 +173,6 @@ def extract_arguments(args):
     url -- URL to download media from
     options -- dictionary containing specified options
     """
-
-
     # Parse arguments using regex
     pattern = r'(?P<url>https?://\S+)|(?P<key>\w+)=(?P<value>-?[a-zA-Z0-9_\.\:x]+)'
     matches = re.findall(pattern, args)

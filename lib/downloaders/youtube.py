@@ -2,6 +2,8 @@ from __future__ import unicode_literals
 import yt_dlp
 import os
 import re
+from lib.utils.constants import DOWNLOAD_FOLDER as download_folder
+
 
 def sanitize_filename(filename):
     # Define the set of illegal characters for filenames
@@ -10,13 +12,14 @@ def sanitize_filename(filename):
     sanitized_filename = re.sub(illegal_chars, '_', filename)
     return sanitized_filename
 
-def set_ydl_opts(format, sanitized_title, destination):
+
+def set_ydl_opts(format, sanitized_title):
 
     assert format in ['mp3', 'mp4', 'gif'], "Format must be 'mp3', 'mp4', or 'gif'"
 
     # Define the common options for yt-dlp
     ydl_opts = {
-        'outtmpl': f'{destination}/{sanitized_title}.%(ext)s'
+        'outtmpl': f'{download_folder}/{sanitized_title}.%(ext)s'
     }
     # Map quality settings to yt-dlp format selectors
 
@@ -54,6 +57,7 @@ def set_ydl_opts(format, sanitized_title, destination):
 
     return ydl_opts
 
+
 def verify_media(info_dict):
 
     max_size = 1024  # Maximum file size in MB
@@ -77,7 +81,8 @@ def verify_media(info_dict):
     if filesize_mb > max_size:
         raise ValueError(error_messages['size'](filesize_mb))
 
-def youtube_downloader(url, destination, format):
+
+def youtube_downloader(url, format):
 
     with yt_dlp.YoutubeDL() as ydl:
         info_dict = ydl.extract_info(url, download=False)
@@ -90,9 +95,9 @@ def youtube_downloader(url, destination, format):
         if format == 'gif':
             format = 'mp4'
 
-        ydl_opts = set_ydl_opts(format, sanitized_title, destination)
+        ydl_opts = set_ydl_opts(format, sanitized_title)
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
     
-    return f'{destination}/{sanitized_title}.{format}'
+    return f'{download_folder}/{sanitized_title}.{format}'

@@ -1,6 +1,5 @@
 from discord.ext import commands
 import discord
-# from lib import get_bot_token, download_media, supported_formats, extract_arguments, remove_files, remove_file, MAX_size
 from lib import *
 import os
 import logging
@@ -20,21 +19,25 @@ DISCORD_BOT_TOKEN = get_bot_token()
 # Create an instance of a bot with all intents enabled
 bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
 
+
 @bot.event
 async def on_ready():
     logging.info(f"Bot is ready, logged in as {bot.user}")
     logging.info("Clearing downloads folder...")
     remove_files()
 
+
 @bot.command()
 async def ping(ctx):
     logging.info("Ping command received.")
     await ctx.send("Pong!")
 
+
 @bot.command()
 async def guide(ctx):
     logging.info("Guide command received.")
     await ctx.send("Commands: !ping, !guide, !download <url> [format=<format>] [start=<start>] [end=<end>] [resolution=<resolution>]")
+
 
 async def send_file(ctx, file_name):
     logging.info(f"Attempting to send file: {file_name}")
@@ -46,13 +49,12 @@ async def send_file(ctx, file_name):
         await ctx.send(file=discord.File(file, file_name))
     logging.info(f"File sent successfully: {file_name}")
 
+
 @bot.command()
 async def download(ctx, *, args):
     logging.info("Download command received with arguments: %s", args)
     
     try:
-
-
         # Extract arguments
         url, options = extract_arguments(args)
 
@@ -84,16 +86,11 @@ async def download(ctx, *, args):
         remove_file(file_name)
         logging.info("Temporary file removed: %s", file_name)
 
-    # try:
-    #     pass
-
     except Exception as e:
         logging.error("Error during download: %s", str(e))
         await ctx.send(f"An error occurred: {e}")
     
     finally:
-
-        # Clean up
         remove_files()
 
 
