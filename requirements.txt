@@ -43,4 +43,4 @@ urllib3==2.2.3
 websockets==13.1
 yarl==1.13.1
 youtube-dl==2021.12.17
-yt-dlp==2024.9.27
+yt-dlp==2025.1.12
