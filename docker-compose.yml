@@ -1,7 +1,5 @@
-version: "3.8"
 services:
   discord-downloader-bot:
-    image: discord-downloader-bot
     build:
       context: .
     env_file: .env
@@ -10,8 +8,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M       # Limit memory usage to 512MB
-          cpus: "1.0"        # Limit CPU usage to 1 core
+          memory: 1024M
+          cpus: "4.0"
         reservations:
-          memory: 256M       # Reserve 256MB of memory
+          memory: 512M
     restart: unless-stopped

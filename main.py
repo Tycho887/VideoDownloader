@@ -1,8 +1,13 @@
 from discord.ext import commands
 import discord
-from lib import *
 import os
 import logging
+import re
+from lib.download import VideoDownloader, VideoJob
+import asyncio
+from lib.validate import validate_url, validate_format, validate_times, validate_resolution, validate_framerate
+from lib.utils import remove_files, remove_file, extract_arguments, seconds_to_hhmmss, SUPPORTED_FORMATS, DOWNLOAD_FOLDER
+from dotenv import load_dotenv
 
 # Setup logging
 logging.basicConfig(
@@ -14,11 +19,11 @@ logging.basicConfig(
     ]
 )
 
-DISCORD_BOT_TOKEN = get_bot_token()
+load_dotenv()
+DISCORD_BOT_TOKEN = os.getenv("DOWNLOAD_BOT_TOKEN")
 
 # Create an instance of a bot with all intents enabled
 bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
-
 
 @bot.event
 async def on_ready():
@@ -36,7 +41,8 @@ async def ping(ctx):
 @bot.command()
 async def guide(ctx):
     logging.info("Guide command received.")
-    await ctx.send("Commands: !ping, !guide, !download <url> [format=<format>] [start=<start>] [end=<end>] [resolution=<resolution>]")
+    await ctx.send("Commands: !ping, !guide, !download <url> [format=<format>] [start=<start>] [end=<end>] [resolution=<resolution>] [framerate=<framerate>]\n"
+                   "Supported formats: mp4, gif, mp3\n")
 
 
 async def send_file(ctx, file_name):
@@ -49,16 +55,13 @@ async def send_file(ctx, file_name):
         await ctx.send(file=discord.File(file, file_name))
     logging.info(f"File sent successfully: {file_name}")
 
-
 @bot.command()
 async def download(ctx, *, args):
     logging.info("Download command received with arguments: %s", args)
-    
+
     try:
-        # Extract arguments
         url, options = extract_arguments(args)
 
-        # Perform validations
         validate_url(url)
         format = options['format'].lower()
         validate_format(format)
@@ -68,30 +71,39 @@ async def download(ctx, *, args):
         validate_times(start, end)
 
         resolution = options['resolution']
-        if resolution:
-            validate_resolution(resolution)
-            resolution_tuple = tuple(map(int, resolution.split('x')))
-        else:
-            resolution_tuple = None
+        resolution_tuple = tuple(map(int, resolution.split('x'))) if resolution else None
+        validate_resolution(resolution)
 
-        # Proceed with download and processing
+        framerate = int(options['framerate']) if options['framerate'] else None
+        validate_framerate(framerate)
+
         await ctx.send("Downloading media...")
-        logging.info("Downloading media with options: %s", options)
+        logging.info("Downloading with parsed options: %s", options)
+        
+        print(f"Downloading {url} with format {format}, start {start}, end {end}, resolution {resolution}, framerate {framerate}")
 
-        file_name, generated_files = download_media(
-            url=url, target_format=format, start_time=start, end_time=end, resolution=resolution_tuple
+        downloader = VideoDownloader(download_dir=DOWNLOAD_FOLDER)
+        job = VideoJob(
+            url=url,
+            format=format,
+            start_time=seconds_to_hhmmss(start),
+            end_time=seconds_to_hhmmss(end),
+            width=resolution_tuple[0] if resolution_tuple else None,
+            height=resolution_tuple[1] if resolution_tuple else None,
+            framerate=framerate
         )
-
+        file_name = await asyncio.to_thread(downloader.run_job, job)
         await send_file(ctx, file_name)
         remove_file(file_name)
         logging.info("Temporary file removed: %s", file_name)
 
     except Exception as e:
-        logging.error("Error during download: %s", str(e))
-        await ctx.send(f"An error occurred: {e}")
-    
-    finally:
-        remove_files()
+        logging.exception("Error during download:")
+        await ctx.send(f"❌ An error occurred: {str(e)}")
 
+    finally:
+        remove_file(file_name)
+        # Two files a generated, one called name.mp4 and another name_processed.mp4
+        remove_file(file_name)
 
 bot.run(DISCORD_BOT_TOKEN)

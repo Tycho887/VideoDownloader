@@ -1,8 +1,10 @@
+# Use a lightweight Conda-compatible base image
 FROM continuumio/miniconda3:latest
 
+# Set the working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies (if needed)
 RUN apt-get update && apt-get install -y \
        ffmpeg \
        libsm6 \
@@ -11,11 +13,18 @@ RUN apt-get update && apt-get install -y \
        && apt-get clean \
        && rm -rf /var/lib/apt/lists/*
 
-# Copy environment.yml first (for caching)
+# Copy environment.yml (if using Conda environment)
 COPY environment.yml /app/
 
-# Create Conda environment
+# Create and activate the Conda environment
 RUN conda env create -f environment.yml
+
+# Copy the rest of the project files
+COPY . /app
+
+# Activate Conda environment and install pip dependencies (if any)
+RUN echo "source activate $(head -1 environment.yml | cut -d' ' -f2)" > ~/.bashrc \
+    && pip install --no-cache-dir -r requirements.txt
 
 # Create a tmpfs directory for downloads
 RUN mkdir -p /mnt/ramdisk
@@ -27,8 +36,5 @@ VOLUME ["/mnt/ramdisk"]
 ENV DOWNLOAD_FOLDER=/mnt/ramdisk
 ENV BOT_ENV_FILE=/app/.env
 
-# Copy the rest of the project files
-COPY . /app
-
-# Activate Conda environment and run the bot
+# Run the bot inside the Conda environment
 CMD ["/bin/bash", "-c", "source activate $(head -1 environment.yml | cut -d' ' -f2) && python main.py"]

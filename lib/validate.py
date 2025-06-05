@@ -1,5 +1,6 @@
-from lib.utils.constants import SUPPORTED_FORMATS, MAX_VIDEO_RESOLUTION
 import re
+from lib.utils import SUPPORTED_FORMATS, MAX_VIDEO_RESOLUTION
+
 
 def validate_url(url):
     if not url:
@@ -20,6 +21,14 @@ def validate_times(start_time, end_time):
         raise ValueError(f"Invalid end time: {end_time}")
     if start_time is not None and end_time is not None and start_time >= end_time:
         raise ValueError(f"Start time must be less than end time. Got start={start_time}, end={end_time}")
+    return True
+
+def validate_framerate(framerate):
+    if framerate is not None:
+        if not isinstance(framerate, int) or framerate <= 0:
+            raise ValueError(f"Invalid framerate: {framerate}. It must be a positive integer.")
+        if framerate > 60:
+            raise ValueError("Framerate must be less than or equal to 60")
     return True
 
 def validate_resolution(resolution):
