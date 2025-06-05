@@ -55,35 +55,31 @@ async def send_file(ctx, file_name):
         await ctx.send(file=discord.File(file, file_name))
     logging.info(f"File sent successfully: {file_name}")
 
-@bot.command()
-async def download(ctx, *, args):
-    logging.info("Download command received with arguments: %s", args)
+async def handle_download(ctx, args):
+    url, options = extract_arguments(args)
 
-    try:
-        url, options = extract_arguments(args)
+    validate_url(url)
+    format = options['format'].lower()
+    validate_format(format)
 
-        validate_url(url)
-        format = options['format'].lower()
-        validate_format(format)
+    start = float(options['start']) if options['start'] else None
+    end = float(options['end']) if options['end'] else None
+    validate_times(start, end)
 
-        start = float(options['start']) if options['start'] else None
-        end = float(options['end']) if options['end'] else None
-        validate_times(start, end)
+    resolution = options['resolution']
+    resolution_tuple = tuple(map(int, resolution.split('x'))) if resolution else None
+    validate_resolution(resolution)
 
-        resolution = options['resolution']
-        resolution_tuple = tuple(map(int, resolution.split('x'))) if resolution else None
-        validate_resolution(resolution)
+    framerate = int(options['framerate']) if options['framerate'] else None
+    validate_framerate(framerate)
 
-        framerate = int(options['framerate']) if options['framerate'] else None
-        validate_framerate(framerate)
+    await ctx.send("Downloading media...")
+    logging.info("Downloading with parsed options: %s", options)
+       
+    print(f"Downloading {url} with format {format}, start {start}, end {end}, resolution {resolution}, framerate {framerate}")
 
-        await ctx.send("Downloading media...")
-        logging.info("Downloading with parsed options: %s", options)
-        
-        print(f"Downloading {url} with format {format}, start {start}, end {end}, resolution {resolution}, framerate {framerate}")
-
-        downloader = VideoDownloader(download_dir=DOWNLOAD_FOLDER)
-        job = VideoJob(
+    downloader = VideoDownloader(download_dir=DOWNLOAD_FOLDER)
+    job = VideoJob(
             url=url,
             format=format,
             start_time=seconds_to_hhmmss(start),
@@ -91,19 +87,28 @@ async def download(ctx, *, args):
             width=resolution_tuple[0] if resolution_tuple else None,
             height=resolution_tuple[1] if resolution_tuple else None,
             framerate=framerate
-        )
-        file_name = await asyncio.to_thread(downloader.run_job, job)
-        await send_file(ctx, file_name)
-        remove_file(file_name)
-        logging.info("Temporary file removed: %s", file_name)
+    )
+    file_name = await asyncio.to_thread(downloader.run_job, job)
+    await send_file(ctx, file_name)
+    remove_file(file_name)
+    logging.info("Temporary file removed: %s", file_name)
+    
+    return file_name
 
-    except Exception as e:
-        logging.exception("Error during download:")
-        await ctx.send(f"❌ An error occurred: {str(e)}")
+semaphore = asyncio.Semaphore(1)  # Limit to 3 concurrent jobs
 
-    finally:
-        remove_file(file_name)
-        # Two files a generated, one called name.mp4 and another name_processed.mp4
-        remove_file(file_name)
+@bot.command()
+async def download(ctx, *, args):
+    logging.info("Download command received with arguments: %s", args)
+
+    async with semaphore:
+        file_name = None
+        try:
+            file_name = await handle_download(ctx, args)
+            logging.info("Download completed successfully: %s", file_name)
+
+        except Exception as e:
+            logging.exception("Error during download:")
+            await ctx.send(f"❌ An error occurred: {str(e)}")
 
 bot.run(DISCORD_BOT_TOKEN)

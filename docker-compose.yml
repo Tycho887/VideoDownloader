@@ -11,5 +11,5 @@ services:
           memory: 1024M
           cpus: "4.0"
         reservations:
-          memory: 512M
+          memory: 256M
     restart: unless-stopped

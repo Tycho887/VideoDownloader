@@ -5,6 +5,7 @@ from typing import Optional
 import yt_dlp
 # We want the current millisecond timestamp for unique output names
 from datetime import datetime
+from uuid import uuid4
 
 def get_timestamp():
     now = datetime.now()
@@ -21,7 +22,7 @@ class VideoJob:
     width: Optional[int] = None
     height: Optional[int] = None
     framerate: Optional[int] = None
-    output_name: Optional[str] = None # f"media_download_{get_timestamp()}"
+    output_name: Optional[str] = f"job_{uuid4().hex}" # f"media_download_{get_timestamp()}"
 
 class VideoDownloader:
     def __init__(self, download_dir: str = "./downloads"):
@@ -87,7 +88,7 @@ class VideoDownloader:
             duration_args = ['-to', job.end_time]
 
         if job.format == "gif":
-            palette_path = os.path.join(self.download_dir, "palette.png")
+            palette_path = os.path.join(self.download_dir, f"palette_{get_timestamp()}.png")
 
             # First pass: generate palette
             subprocess.run([
@@ -152,3 +153,16 @@ class VideoDownloader:
             
         return self._process(downloaded_path, output_path, job)
 
+# downloader = VideoDownloader()
+# job = VideoJob(
+#     url="https://www.youtube.com/watch?v=B94IY-wTMtE",#url="https://www.youtube.com/watch?v=40SZM77nqo4",
+#     format="mp4",
+#     start_time="00:00:02",  # Start trimming from 2 seconds
+#     end_time="00:00:08",  # Only trim the end
+#     width=200, height=200,  # Resize
+#     framerate=5            # Frame rate override
+# )
+
+# downloader = VideoDownloader()
+# path = downloader.run_job(job)
+# print("Saved to:", path)
