@@ -7,6 +7,7 @@ from download import VideoDownloader, VideoJob
 import asyncio
 from validate import validate_url, validate_format, validate_times, validate_resolution
 from utils import remove_files, remove_file, extract_arguments, seconds_to_hhmmss, SUPPORTED_FORMATS, DOWNLOAD_FOLDER
+from dotenv import load_dotenv
 
 # Setup logging
 logging.basicConfig(
@@ -18,6 +19,7 @@ logging.basicConfig(
     ]
 )
 
+load_dotenv()
 DISCORD_BOT_TOKEN = os.getenv("DOWNLOAD_BOT_TOKEN")
 
 # Create an instance of a bot with all intents enabled
@@ -39,7 +41,8 @@ async def ping(ctx):
 @bot.command()
 async def guide(ctx):
     logging.info("Guide command received.")
-    await ctx.send("Commands: !ping, !guide, !download <url> [format=<format>] [start=<start>] [end=<end>] [resolution=<resolution>]")
+    await ctx.send("Commands: !ping, !guide, !download <url> [format=<format>] [start=<start>] [end=<end>] [resolution=<resolution>] [framerate=<framerate>]\n"
+                   "Supported formats: mp4, gif, mp3\n")
 
 
 async def send_file(ctx, file_name):
@@ -97,6 +100,8 @@ async def download(ctx, *, args):
         await ctx.send(f"❌ An error occurred: {str(e)}")
 
     finally:
+        remove_file(file_name)
+        # Two files a generated, one called name.mp4 and another name_processed.mp4
         remove_file(file_name)
 
 bot.run(DISCORD_BOT_TOKEN)

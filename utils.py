@@ -8,10 +8,15 @@ MAX_GIF_FRAMES = 50
 MAX_GIF_LENGTH = 30 # seconds
 MAX_VIDEO_RESOLUTION = 1920
 KNOWN_KEYS = ('format', 'start', 'end', 'resolution', 'framerate')
-DOWNLOAD_FOLDER = "./downloads" #"/mnt/ramdisk"
+DOWNLOAD_FOLDER = "/mnt/ramdisk"
 
 def remove_files():
     # Remove all mp3, mp4, and gif files in the downloads folder
+    try:
+        os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
+    except Exception as e:
+        logging.error(f"Error creating download folder: {e}")
+        return
     for file in os.listdir(DOWNLOAD_FOLDER):
         if file.endswith(SUPPORTED_FORMATS):
             os.remove(os.path.join(DOWNLOAD_FOLDER, file))

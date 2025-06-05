@@ -29,7 +29,7 @@ class VideoDownloader:
         os.makedirs(self.download_dir, exist_ok=True)
 
     def _get_output_path(self, base_name: str, format: str) -> str:
-        return os.path.join(self.download_dir, f"{base_name}.{format}")
+        return os.path.join(self.download_dir, f"{base_name}_processed.{format}")
 
     def _download(self, url: str, format: str, filename: Optional[str]) -> str:
         ydl_format = "bestvideo[ext=mp4][vcodec!*=av01]+bestaudio/best"
@@ -42,7 +42,7 @@ class VideoDownloader:
                 'preferredcodec': 'mp3',
             })
         elif format in ("mp4", "gif"):
-            ydl_format = "bestvideo[ext=mp4]+bestaudio/best"
+            ydl_format = "bestvideo[ext=mp4][vcodec!*=av01]+bestaudio/best"
             postprocessors.append({
                 'key': 'FFmpegVideoConvertor',
                 'preferedformat': 'mp4',
@@ -122,9 +122,13 @@ class VideoDownloader:
                 '-y', output_path
             ]
             try:
-                subprocess.run(cmd, check=True)
+               subprocess.run(cmd, check=True)
             except subprocess.CalledProcessError as e:
-                print("Error occurred while processing video:", e)
+               print("Error occurred while processing video:", e)
+
+        # Remove the original unprocessed file
+        if os.path.exists(input_path):
+            os.remove(input_path)
 
         return output_path
 
@@ -142,20 +146,6 @@ class VideoDownloader:
         downloaded_path = self._download(job.url, job.format, job.output_name)
         base_name, _ = os.path.splitext(os.path.basename(downloaded_path))
         output_path = self._get_output_path(base_name, job.format)
-
+            
         return self._process(downloaded_path, output_path, job)
 
-
-downloader = VideoDownloader()
-job = VideoJob(
-    url="https://youtube.com/shorts/EFAVf_a4KcM?si=x9_wsEOk2CeCSfqo",
-    format="mp4",
-    start_time="00:00:02",  # Start trimming from 2 seconds
-    end_time="00:00:08",  # Only trim the end
-    width=200, height=200,  # Resize
-    framerate=5            # Frame rate override
-)
-
-downloader = VideoDownloader()
-path = downloader.run_job(job)
-print("Saved to:", path)
