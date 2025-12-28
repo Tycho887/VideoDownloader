@@ -1,34 +1,37 @@
-FROM continuumio/miniconda3:latest
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies (ffmpeg is critical for your bot)
 RUN apt-get update && apt-get install -y \
-       ffmpeg \
-       libsm6 \
-       libxext6 \
-       libgl1 \
-       && apt-get clean \
-       && rm -rf /var/lib/apt/lists/*
+    ffmpeg \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy environment.yml first (for caching)
-COPY environment.yml /app/
+# Install Poetry
+RUN pip install poetry
 
-# Create Conda environment
-RUN conda env create -f environment.yml
+# Configure Poetry:
+# virtualenvs.create false: Installs packages globally in the container (simpler for Docker)
+RUN poetry config virtualenvs.create false
 
-# Create a tmpfs directory for downloads
+# Copy pyproject.toml and poetry.lock (if it exists) first to leverage Docker cache
+COPY pyproject.toml poetry.lock* /app/
+
+# Install dependencies
+RUN poetry install --no-root --no-interaction --no-ansi
+
+# Create the mount point for the RAM disk
 RUN mkdir -p /mnt/ramdisk
 
-# Set up a tmpfs mount point for /mnt/ramdisk
-VOLUME ["/mnt/ramdisk"]
-
-# Default environment variables
-ENV DOWNLOAD_FOLDER=/mnt/ramdisk
-ENV BOT_ENV_FILE=/app/.env
-
-# Copy the rest of the project files
+# Copy the rest of the application
 COPY . /app
 
-# Activate Conda environment and run the bot
-CMD ["/bin/bash", "-c", "source activate $(head -1 environment.yml | cut -d' ' -f2) && python main.py"]
+# Define the volume (optional documentation, actual mount happens in compose)
+VOLUME ["/mnt/ramdisk"]
+
+# Environment variables
+ENV DOWNLOAD_FOLDER=/mnt/ramdisk
+
+# Run the bot
+CMD ["python", "main.py"]

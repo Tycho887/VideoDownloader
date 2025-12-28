@@ -1,4 +1,4 @@
-from discord.ext import commands
+from discord.ext import commands, tasks
 import discord
 import os
 import logging
@@ -8,6 +8,7 @@ import asyncio
 from lib.validate import validate_url, validate_format, validate_times, validate_resolution, validate_framerate
 from lib.utils import remove_files, remove_file, extract_arguments, seconds_to_hhmmss, SUPPORTED_FORMATS, DOWNLOAD_FOLDER
 from dotenv import load_dotenv
+import sys  # Add this import at the top
 
 # Setup logging
 logging.basicConfig(
@@ -20,17 +21,30 @@ logging.basicConfig(
 )
 
 load_dotenv()
-DISCORD_BOT_TOKEN = os.getenv("DOWNLOAD_BOT_TOKEN")
+DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+
+print(f"The Token is: {DISCORD_BOT_TOKEN}")
 
 # Create an instance of a bot with all intents enabled
 bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
+
+# Add this task function
+@tasks.loop(hours=24)
+async def scheduled_restart():
+    # We skip the first execution (which happens immediately on start)
+    if scheduled_restart.current_loop > 0:
+        logging.info("Performing daily scheduled restart...")
+        sys.exit(0) # Exit cleanly, Docker will restart it
 
 @bot.event
 async def on_ready():
     logging.info(f"Bot is ready, logged in as {bot.user}")
     logging.info("Clearing downloads folder...")
     remove_files()
-
+    
+    # Start the restart timer
+    if not scheduled_restart.is_running():
+        scheduled_restart.start()
 
 @bot.command()
 async def ping(ctx):
@@ -75,8 +89,6 @@ async def handle_download(ctx, args):
 
     await ctx.send("Downloading media...")
     logging.info("Downloading with parsed options: %s", options)
-       
-    print(f"Downloading {url} with format {format}, start {start}, end {end}, resolution {resolution}, framerate {framerate}")
 
     downloader = VideoDownloader(download_dir=DOWNLOAD_FOLDER)
     job = VideoJob(
@@ -88,14 +100,27 @@ async def handle_download(ctx, args):
             height=resolution_tuple[1] if resolution_tuple else None,
             framerate=framerate
     )
-    file_name = await asyncio.to_thread(downloader.run_job, job)
-    await send_file(ctx, file_name)
-    remove_file(file_name)
-    logging.info("Temporary file removed: %s", file_name)
+
+    file_name = None
+    try:
+        # Run the blocking download/process in a thread
+        file_name = await asyncio.to_thread(downloader.run_job, job)
+        
+        # Check if file exists before sending
+        if not os.path.exists(file_name):
+             raise FileNotFoundError("Processing failed, file was not created.")
+
+        await send_file(ctx, file_name)
+    finally:
+        # CRITICAL: This block runs whether the download succeeded, failed, 
+        # or if sending the message failed.
+        if file_name:
+            remove_file(file_name)
+            logging.info("Temporary file removed (or attempted): %s", file_name)
     
     return file_name
 
-semaphore = asyncio.Semaphore(1)  # Limit to 3 concurrent jobs
+semaphore = asyncio.Semaphore(1)  # Limit to 1 job at a time
 
 @bot.command()
 async def download(ctx, *, args):
@@ -109,6 +134,14 @@ async def download(ctx, *, args):
 
         except Exception as e:
             logging.exception("Error during download:")
-            await ctx.send(f"❌ An error occurred: {str(e)}")
+            
+            # Check for "No space left on device" (Errno 28)
+            # This handles both standard OSErrors and ffmpeg errors
+            error_str = str(e).lower()
+            if "no space left" in error_str or (hasattr(e, 'errno') and e.errno == 28):
+                await ctx.send("❌ Critical Storage Error: Restarting bot to clear cache...")
+                logging.critical("Disk full! Exiting to trigger Docker restart.")
+                sys.exit(1)  # forcing exit so Docker restarts the container
 
+            await ctx.send(f"❌ An error occurred: {str(e)}")
 bot.run(DISCORD_BOT_TOKEN)

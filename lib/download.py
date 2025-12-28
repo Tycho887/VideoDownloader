@@ -87,52 +87,58 @@ class VideoDownloader:
         elif job.end_time:
             duration_args = ['-to', job.end_time]
 
-        if job.format == "gif":
-            palette_path = os.path.join(self.download_dir, f"palette_{get_timestamp()}.png")
+        try:
+            if job.format == "gif":
+                palette_path = os.path.join(self.download_dir, f"palette_{get_timestamp()}.png")
+                try:
+                    # First pass: generate palette
+                    subprocess.run([
+                        'ffmpeg', *start_args, *duration_args,
+                        '-i', input_path,
+                        '-vf', f"{vf},palettegen" if vf else 'palettegen',
+                        '-y', palette_path,
+                        '-threads', 'auto'
+                    ], check=True)
 
-            # First pass: generate palette
-            subprocess.run([
-                'ffmpeg', *start_args, *duration_args,
-                '-i', input_path,
-                '-vf', f"{vf},palettegen" if vf else 'palettegen',
-                '-y', palette_path,
-                '-threads', 'auto'
-            ], check=True)
+                    if not os.path.exists(palette_path):
+                        raise RuntimeError("Palette generation failed.")
 
-            if not os.path.exists(palette_path):
-                raise RuntimeError("Palette generation failed.")
+                    # Second pass: apply palette
+                    subprocess.run([
+                        'ffmpeg', *start_args, *duration_args,
+                        '-i', input_path,
+                        '-i', palette_path,
+                        '-lavfi', f"{vf} [x]; [x][1:v] paletteuse" if vf else 'paletteuse',
+                        '-y', output_path,
+                        '-threads', 'auto'
+                    ], check=True)
+                finally:
+                    # Ensure palette is removed even if GIF generation fails
+                    if os.path.exists(palette_path):
+                        os.remove(palette_path)
+            else:
+                cmd = ['ffmpeg', '-i', input_path, *start_args, *duration_args]
+                if vf:
+                    cmd += ['-vf', vf]
+                cmd += [
+                    '-c:v', 'libx264' if job.format == 'mp4' else 'copy',
+                    '-preset', 'fast',
+                    '-crf', '23',
+                    '-c:a', 'aac' if job.format != 'mp3' else 'copy',
+                    '-b:a', '128k',
+                    '-y', output_path,
+                    '-threads', 'auto'
+                ]
+                subprocess.run(cmd, check=True)
 
-            # Second pass: apply palette
-            subprocess.run([
-                'ffmpeg', *start_args, *duration_args,
-                '-i', input_path,
-                '-i', palette_path,
-                '-lavfi', f"{vf} [x]; [x][1:v] paletteuse" if vf else 'paletteuse',
-                '-y', output_path,
-                '-threads', 'auto'
-            ], check=True)
-            os.remove(palette_path)
-        else:
-            cmd = ['ffmpeg', '-i', input_path, *start_args, *duration_args]
-            if vf:
-                cmd += ['-vf', vf]
-            cmd += [
-                '-c:v', 'libx264' if job.format == 'mp4' else 'copy',
-                '-preset', 'fast',
-                '-crf', '23',
-                '-c:a', 'aac' if job.format != 'mp3' else 'copy',
-                '-b:a', '128k',
-                '-y', output_path,
-                '-threads', 'auto'
-            ]
-            try:
-               subprocess.run(cmd, check=True)
-            except subprocess.CalledProcessError as e:
-               print("Error occurred while processing video:", e)
-
-        # Remove the original unprocessed file
-        if os.path.exists(input_path):
-            os.remove(input_path)
+        except subprocess.CalledProcessError as e:
+            print(f"Error occurred while processing video: {e}")
+            # Re-raise so the bot knows the job failed
+            raise e
+        finally:
+            # CRITICAL: Always remove the input file, success or failure
+            if os.path.exists(input_path):
+                os.remove(input_path)
 
         return output_path
 

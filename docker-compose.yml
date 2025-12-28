@@ -3,8 +3,9 @@ services:
     build:
       context: .
     env_file: .env
+    # tmpfs mounts a temporary filesystem in RAM, avoiding SD card writes
     tmpfs:
-      - /mnt/ramdisk:rw,size=100m
+      - /mnt/ramdisk:rw,size=256m,mode=1777
     deploy:
       resources:
         limits:

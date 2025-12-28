@@ -10,14 +10,18 @@ else
   echo "✅ .env file found."
 fi
 
-echo "⬆️ Updating docker-compose..."
-pip install --upgrade docker-compose
+# Detect if we should use 'docker compose' (v2) or 'docker-compose' (v1)
+if docker compose version >/dev/null 2>&1; then
+    DOCKER_CMD="docker compose"
+else
+    DOCKER_CMD="docker-compose"
+fi
 
 echo "🧹 Cleaning up old Docker containers and images..."
-docker-compose down --volumes --remove-orphans
-docker system prune -af -f
+$DOCKER_CMD down --volumes --remove-orphans
+docker system prune -af
 
 echo "🔨 Rebuilding Docker images without cache..."
-docker-compose build --no-cache
+$DOCKER_CMD build --no-cache
 
-echo "✅ Done. Run 'docker-compose up' to start the services."
+echo "✅ Done. Run '$DOCKER_CMD up -d' to start the services."

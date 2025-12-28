@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "videodownloader"
+version = "1.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+discord = "^2.3.2"
+yt-dlp = "^2025.12.8"
+ffmpeg = "^1.4"
+python-dotenv = "^1.2.1"
+async-timeout = "^5.0.1"
+iniconfig = "^2.3.0"
+multidict = "^6.7.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
