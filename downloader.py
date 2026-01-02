@@ -7,7 +7,7 @@ def download_video_segment(
     start_time: str,  # Format: "HH:MM:SS" or "MM:SS" or "SS"
     end_time: str,     # Format: same as start_time
     output_dir: str = "./downloads",
-    resolution: Optional[Tuple[int, int]] = None,  # (width, height)
+    resolution: Optional[Tuple[int, int]] = 'auto',  # (width, height)
     format: str = "mp4",  # "mp4", "webm", etc.
 ) -> str:
     """
@@ -57,12 +57,12 @@ def download_video_segment(
 
     return filename
 
-# Example: Download a 10-second clip (1:30 to 1:40) at 720p resolution
-filename = download_video_segment(
-    url="https://www.youtube.com/watch?v=Po7EpuGfZRI",
-    start_time="00:01:30",
-    end_time="00:01:40",
-    resolution=(1280, 720),
-    format="mp4",
-)
-print(f"Downloaded: {filename}")
+# # Example: Download a 10-second clip (1:30 to 1:40) at 720p resolution
+# filename = download_video_segment(
+#     url="https://www.youtube.com/watch?v=Po7EpuGfZRI",
+#     start_time="00:01:30",
+#     end_time="00:01:40",
+#     resolution=(1280, 720),
+#     format="mp4",
+# )
+# print(f"Downloaded: {filename}")
